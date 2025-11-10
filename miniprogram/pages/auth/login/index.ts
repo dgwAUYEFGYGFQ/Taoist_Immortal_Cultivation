@@ -21,6 +21,19 @@ Page({
     const o = (wx.getStorageSync('X_OPENID') as string) || ''
     const r = (wx.getStorageSync('X_ROLE') as string) || 'DAO_FRIEND'
     this.setData({ openid: o, role: (r as any) })
+
+    // 云函数联通性测试：进入登录页即调用 getUserInfo
+    if ((wx as any).cloud) {
+      ;(wx as any).cloud.callFunction({ name: 'getUserInfo' })
+        .then((res: any) => {
+          console.log('cloud getUserInfo:', res?.result)
+        })
+        .catch((err: any) => {
+          console.error('cloud getUserInfo error:', err)
+        })
+    } else {
+      console.error('当前基础库不支持云开发，请升级微信或基础库版本')
+    }
   },
 
   switchTab(e: any) {

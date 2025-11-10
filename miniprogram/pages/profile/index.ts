@@ -17,6 +17,15 @@ Page({
 
   onShow() {
     this.load()
+    if ((wx as any).cloud) {
+      ;(wx as any).cloud.callFunction({ name: 'getUserInfo' })
+        .then((res: any) => {
+          console.log('cloud getUserInfo:', res?.result)
+        })
+        .catch((err: any) => {
+          console.error('cloud getUserInfo error:', err)
+        })
+    }
   },
 
   async load() {

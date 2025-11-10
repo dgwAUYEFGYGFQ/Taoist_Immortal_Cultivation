@@ -1,27 +1,23 @@
 {
-    "libVersion": "3.10.2",
-    "projectname": "Taoist_Immortal_Cultivation",
-    "setting": {
-        "urlCheck": false,
-        "coverView": true,
-        "lazyloadPlaceholderEnable": false,
-        "skylineRenderEnable": false,
-        "preloadBackgroundData": false,
-        "autoAudits": false,
-        "showShadowRootInWxmlPanel": true,
-        "compileHotReLoad": true
-    },
-    "condition": {
-        "miniprogram": {
-            "list": [
-                {
-                    "name": "激活",
-                    "pathName": "/pages/auth/activate/index",
-                    "query": "",
-                    "scene": null,
-                    "launchMode": "default"
-                }
-            ]
-        }
-    }
+  "libVersion": "3.10.2",
+  "projectname": "Taoist_Immortal_Cultivation",
+  "setting": {
+    "urlCheck": false,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "compileHotReLoad": true,
+    "useApiHook": true,
+    "useApiHostProcess": true,
+    "useStaticServer": false,
+    "useLanDebug": false,
+    "showES6CompileOption": false,
+    "checkInvalidKey": true,
+    "ignoreDevUnusedFiles": true,
+    "bigPackageSizeSupport": false
+  },
+  "condition": {}
 }
