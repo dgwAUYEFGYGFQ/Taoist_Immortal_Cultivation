@@ -1,0 +1,88 @@
+<view class="wrap">
+  <view class="filters">
+    <picker mode="selector" range="{{statusOptions}}" value="{{statusIndex}}" bindchange="onStatusChange">
+      <view class="picker">状态：{{statusOptions[statusIndex]}}</view>
+    </picker>
+    <view class="dates">
+      <picker mode="date" value="{{submitStart}}" bindchange="onSubmitStartChange"><view class="picker">提交起：{{submitStart || '不限'}}</view></picker>
+      <picker mode="date" value="{{submitEnd}}" bindchange="onSubmitEndChange"><view class="picker">提交止：{{submitEnd || '不限'}}</view></picker>
+    </view>
+    <view class="dates">
+      <picker mode="date" value="{{reviewStart}}" bindchange="onReviewStartChange"><view class="picker">评审起：{{reviewStart || '不限'}}</view></picker>
+      <picker mode="date" value="{{reviewEnd}}" bindchange="onReviewEndChange"><view class="picker">评审止：{{reviewEnd || '不限'}}</view></picker>
+    </view>
+    <view class="kw">
+      <input class="kw-input" placeholder="提交人（openid/昵称）" value="{{submitter}}" bindinput="onSubmitterInput" />
+      <button size="mini" bindtap="doSearch">筛选</button>
+      <button size="mini" bindtap="resetFilters">重置</button>
+    </view>
+  </view>
+
+  <block wx:if="{{list && list.length}}">
+    <block wx:for="{{list}}" wx:key="id">
+      <view class="card" data-id="{{item.id}}" bindtap="openDetail">
+        <view class="title">{{item.title}}</view>
+        <view class="meta">发生：{{item.occurredDate}} · 提交：{{item.createdDate}}</view>
+        <view class="desc">{{item.description}}</view>
+        <view class="meta">提交人：{{item.submitter}}<block wx:if="{{item.reviewAt}}"> · 评审：{{item.reviewAt.slice(0,10)}}</block></view>
+
+      </view>
+    </block>
+    <view class="loadmore" wx:if="{{nextCursor}}">
+      <button size="mini" bindtap="loadMore" loading="{{loading}}">加载更多</button>
+    </view>
+  </block>
+  <view class="empty" wx:else>暂无记录</view>
+
+  <view class="detail-mask" wx:if="{{detailVisible}}" catchtouchmove="true">
+    <view class="detail-panel center">
+      <view class="d-header">
+        <view class="d-title">评审详情</view>
+        <text class="d-close" bindtap="closeDetail">×</text>
+      </view>
+      <view class="d-row"><text class="d-label">标题：</text><text class="d-value">{{detail.title}}</text></view>
+      <view class="d-row"><text class="d-label">提交人：</text><text class="d-value">{{detail.userNickname}}</text></view>
+      <view class="d-row"><text class="d-label">状态：</text><text class="d-value">{{detail.status}}</text></view>
+      <view class="d-row"><text class="d-label">发生时间：</text><text class="d-value">{{detail.occurredDate}}</text></view>
+      <view class="d-row"><text class="d-label">提交时间：</text><text class="d-value">{{detail.createdDate}}</text></view>
+      <view class="d-row d-multi"><text class="d-label">描述：</text><text class="d-value">{{detail.description}}</text></view>
+      <view class="d-row" wx:if="{{detail.status!=='PENDING'}}"><text class="d-label">评审时间：</text><text class="d-value">{{detail.reviewDate}}</text></view>
+      <view class="d-row" wx:if="{{detail.status!=='PENDING'}}"><text class="d-label">评审人：</text><text class="d-value">{{detail.reviewerNickname}}</text></view>
+
+      <view class="d-att" wx:if="{{detail.attachments && detail.attachments.length}}">
+        <block wx:for="{{detail.attachments}}" wx:key="index">
+          <image class="att-img" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="previewImg" />
+        </block>
+      </view>
+
+      <view class="d-row">
+        <text class="d-label">审批备注：</text>
+        <block wx:if="{{detail.status==='PENDING'}}">
+          <input class="d-input" placeholder="可选" value="{{formComment}}" bindinput="onFormCommentInput" />
+        </block>
+        <block wx:else>
+          <text class="d-value">{{formComment}}</text>
+        </block>
+      </view>
+      <view class="d-row">
+        <text class="d-label">分数：</text>
+        <block wx:if="{{detail.status==='PENDING'}}">
+          <input class="d-input" type="number" placeholder="通过默认 10 / 驳回默认 0" value="{{formScore}}" bindinput="onFormScoreInput" />
+        </block>
+        <block wx:else>
+          <text class="d-value">{{formScore}}</text>
+        </block>
+      </view>
+
+      <view class="d-actions center-actions" wx:if="{{detail.status==='PENDING'}}">
+        <button class="btn-left" size="mini" type="warn" data-id="{{detail.id}}" catchtap="rejectSubmit" loading="{{rejecting}}">驳回</button>
+        <button class="btn-right" size="mini" type="primary" data-id="{{detail.id}}" catchtap="approveSubmit" loading="{{approving}}">通过</button>
+      </view>
+
+      <view class="d-actions" wx:if="{{detail.status!=='PENDING'}}">
+        <button size="mini" bindtap="closeDetail">关闭</button>
+      </view>
+    </view>
+  </view>
+</view>
+

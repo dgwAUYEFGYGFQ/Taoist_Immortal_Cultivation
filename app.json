@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/auth/login/index",
+    "pages/index/index",
+    "pages/auth/activate/index",
+    "pages/deeds/submit/index",
+    "pages/deeds/mine/index",
+    "pages/profile/index",
+    "pages/profile/bind/index",
+    "pages/points/ledger/index",
+    "pages/exhibits/index",
+    "pages/exhibits/detail/index",
+    "pages/ziyun/index",
+    "pages/admin/invite/index",
+    "pages/admin/exhibits/index",
+
+    "pages/elder/review/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Taoist Immortal Cultivation",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundTextStyle": "light"
+  },
+  "entryPagePath": "pages/auth/login/index",
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/deeds/mine/index", "text": "记录" },
+      { "pagePath": "pages/profile/index", "text": "我的" }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

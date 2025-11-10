@@ -1,0 +1,142 @@
+<view class="page">
+  <view class="toolbar">
+    <view class="row">
+      <text class="label">段位</text>
+      <picker mode="selector" range="{{levels}}" range-key="name" bindchange="onPickLevel">
+        <view class="picker">{{ currentLevelName || '选择段位' }}</view>
+      </picker>
+    </view>
+    <button type="primary" class="btn" bindtap="openCreate" size="mini">新增展品</button>
+  </view>
+  <view class="filters">
+    <view class="row">
+      <text class="label">关键字</text>
+      <input class="input" placeholder="名称关键词" bindinput="onInputKeyword" confirm-type="search" bindconfirm="doSearch"/>
+      <button size="mini" bindtap="doSearch">搜索</button>
+    </view>
+    <view class="row">
+      <text class="label">楼层</text>
+      <input class="input small" type="number" placeholder="1~6" bindinput="onPickFilterLayer" />
+      <text class="label">等级</text>
+      <picker mode="selector" range="{{grades}}" bindchange="onPickFilterGrade">
+        <view class="picker">选择</view>
+      </picker>
+      <text class="label">效果</text>
+      <picker mode="selector" range="{{effectTypes}}" bindchange="onPickFilterEffect">
+        <view class="picker">选择</view>
+      </picker>
+      <text class="label">发布</text>
+      <picker mode="selector" range="{{publishedOptions}}" bindchange="onPickFilterPublished">
+        <view class="picker">全部</view>
+      </picker>
+    </view>
+  </view>
+  <view class="batchbar">
+    <view class="row">
+      <text class="label">批量贡献点</text>
+      <input class="input small" type="number" placeholder="填数值" bindinput="onInputBatchCost" />
+      <text class="label">批量楼层</text>
+      <input class="input small" type="number" placeholder="1~6" bindinput="onInputBatchLayer" />
+      <button size="mini" bindtap="onBatchUpdate">批量更新</button>
+      <button size="mini" type="primary" data-on="true" bindtap="onBatchPublish">批量上架</button>
+      <button size="mini" type="warn" data-on="false" bindtap="onBatchPublish">批量下架</button>
+    </view>
+  </view>
+
+  <view class="list">
+    <block wx:if="{{list.length>0}}">
+      <checkbox-group bindchange="onSelectChange">
+        <block wx:for="{{list}}" wx:key="id">
+          <view class="item">
+            <checkbox value="{{item.id}}" checked="{{selectedIds.indexOf(item.id) >= 0}}"/>
+            <image class="thumb" src="{{item.imageUrl}}" mode="aspectFill" />
+            <view class="meta">
+              <view class="name">{{item.name}}</view>
+              <view class="lore">{{item.lore}}</view>
+              <view class="subline">
+                <text class="badge">{{item.grade||''}}</text>
+                <text class="badge">{{item.effectType||''}}</text>
+                <text class="cost">需贡献点 {{item.costPoints||0}}</text>
+              </view>
+              <view class="ops">
+                <switch checked="{{item.isPublished}}" data-id="{{item.id}}" bindchange="onToggleRowPublish" />
+                <button size="mini" bindtap="openEdit" data-id="{{item.id}}">编辑</button>
+                <button size="mini" type="warn" bindtap="remove" data-id="{{item.id}}">删除</button>
+              </view>
+            </view>
+          </view>
+        </block>
+      </checkbox-group>
+    </block>
+    <block wx:else>
+      <view class="empty">暂无展品</view>
+    </block>
+  </view>
+
+  <block wx:if="{{showForm}}">
+    <view class="form">
+      <view class="row">
+        <text class="label">段位</text>
+        <picker mode="selector" range="{{levels}}" range-key="name" bindchange="onPickFormLevel">
+          <view class="picker">{{ formLevelName || '选择段位' }}</view>
+        </picker>
+      </view>
+      <view class="row">
+        <text class="label">名称</text>
+        <input class="input" value="{{form.name}}" bindinput="onInputName" placeholder="请输入名称" />
+      </view>
+      <view class="row">
+        <text class="label">描述</text>
+        <textarea class="textarea" value="{{form.lore}}" bindinput="onInputLore" placeholder="请输入描述"></textarea>
+      </view>
+      <view class="row">
+        <text class="label">图片</text>
+        <button size="mini" bindtap="chooseImage">选择/上传图片</button>
+      </view>
+      <image wx:if="{{form.imageUrl}}" class="preview" src="{{form.imageUrl}}" mode="aspectFill" />
+
+      <view class="row">
+        <text class="label">作者</text>
+        <input class="input" value="{{form.author}}" bindinput="onInputAuthor" placeholder="如：灵虚子" />
+      </view>
+      <view class="row">
+        <text class="label">等级</text>
+        <picker mode="selector" range="{{grades}}" bindchange="onPickGrade">
+          <view class="picker">{{ form.grade || '选择等级' }}</view>
+        </picker>
+      </view>
+      <view class="row">
+        <text class="label">效果</text>
+        <picker mode="selector" range="{{effectTypes}}" bindchange="onPickEffectType">
+          <view class="picker">{{ form.effectType || '选择效果类型' }}</view>
+        </picker>
+      </view>
+      <view class="row">
+        <text class="label">贡献点</text>
+        <input class="input" type="number" value="{{form.costPoints}}" bindinput="onInputCost" placeholder="需要贡献点" />
+      </view>
+      <view class="row">
+        <text class="label">初始库存</text>
+        <input class="input" type="number" value="{{form.stockInit}}" bindinput="onInputStockInit" placeholder="展示用途" />
+      </view>
+      <view class="row">
+        <text class="label">当前库存</text>
+        <input class="input" type="number" value="{{form.stockCurrent}}" bindinput="onInputStockCurrent" placeholder="展示用途" />
+      </view>
+      <view class="row">
+        <text class="label">楼层</text>
+        <input class="input" type="number" value="{{form.layer}}" bindinput="onPickLayer" placeholder="1~6" />
+      </view>
+      <view class="row">
+        <text class="label">发布</text>
+        <switch checked="{{form.isPublished}}" bindchange="onTogglePublish" />
+      </view>
+
+      <view class="form-ops">
+        <button type="primary" bindtap="submit" loading="{{loading}}">保存</button>
+        <button bindtap="cancelForm">取消</button>
+      </view>
+    </view>
+  </block>
+</view>
+

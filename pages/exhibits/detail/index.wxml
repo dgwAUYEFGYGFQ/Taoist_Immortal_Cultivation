@@ -1,0 +1,27 @@
+<view class="page">
+  <block wx:if="{{detail}}">
+    <image class="cover" src="{{detail.imageUrl}}" mode="aspectFill" />
+    <view class="content">
+      <view class="title">{{detail.name}}</view>
+      <view class="meta">
+        <text class="badge">{{detail.grade || ''}}</text>
+        <text class="badge">{{detail.effectType || ''}}</text>
+        <text class="author">{{detail.author || ''}}</text>
+      </view>
+      <block wx:if="{{detail.isUnderstood}}">
+        <view class="lore">{{detail.lore}}</view>
+      </block>
+      <block wx:else>
+        <view class="locked-tip">悟性未至，暂不可参悟详情</view>
+      </block>
+      <block wx:if="{{!detail.isUnderstood}}">
+        <button class="btn-redeem" type="primary" loading="{{redeeming}}" bindtap="onRedeem">使用贡献点获取（需 {{detail.requiredPoints || detail.costPoints || 0}}）</button>
+      </block>
+
+    </view>
+  </block>
+  <block wx:else>
+    <view class="empty">加载中...</view>
+  </block>
+</view>
+

@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="form-item">
+    <text class="label">标题</text>
+    <input placeholder="请输入标题" bindinput="onTitle" />
+  </view>
+
+  <view class="form-item">
+    <text class="label">描述</text>
+    <textarea placeholder="请描述事件经过" bindinput="onDesc"></textarea>
+  </view>
+
+  <view class="form-item">
+    <text class="label">发生时间</text>
+    <picker mode="date" bindchange="onDate">
+      <view class="picker">{{occurredAt || '选择日期'}}</view>
+    </picker>
+  </view>
+  <view class="form-item">
+    <text class="label">功德类型</text>
+    <picker mode="selector" range="{{typeOptions}}" value="{{typeIndex}}" bindchange="onTypeChange">
+      <view class="picker">{{typeOptions[typeIndex]}}</view>
+    </picker>
+  </view>
+
+
+
+
+  <view class="form-item">
+    <button type="default" bindtap="onChooseImage">选择图片</button>
+    <view class="images">
+      <block wx:for="{{attachments}}" wx:key="*this">
+        <image class="img" src="{{item}}" mode="aspectFill" />
+      </block>
+    </view>
+  </view>
+
+  <button type="primary" bindtap="onSubmit">提交</button>
+</view>
+

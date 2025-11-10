@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="tabs">
+    <view class="tab {{currentType==='VIRTUE'?'active':''}}" data-type="VIRTUE" bindtap="onSwitchType">善恶点</view>
+    <view class="tab {{currentType==='CONTRIB'?'active':''}}" data-type="CONTRIB" bindtap="onSwitchType">贡献点</view>
+  </view>
+
+  <block wx:if="{{list.length === 0 && !loading}}">
+    <view class="empty">暂无流水</view>
+  </block>
+  <block wx:for="{{list}}" wx:key="id" wx:for-item="item">
+    <view class="item">
+      <view class="left">
+        <view class="title">{{ item.remark || item.sourceType }}</view>
+        <view class="sub">{{ item.date }} {{ item.time }}</view>
+      </view>
+      <view class="right {{ item.delta >= 0 ? 'inc' : 'dec' }}">{{ item.sign }}{{ item.delta }}</view>
+    </view>
+  </block>
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+  <view class="more" wx:if="{{!loading && list.length < total}}">上拉加载更多</view>
+  <view class="done" wx:if="{{!loading && list.length>=total && list.length>0}}">已到底</view>
+</view>
+

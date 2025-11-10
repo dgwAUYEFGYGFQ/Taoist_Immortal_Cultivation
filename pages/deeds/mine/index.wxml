@@ -1,0 +1,80 @@
+<view class="page">
+  <!-- 筛选区 -->
+  <view class="filters">
+    <picker mode="selector" range="{{statusOptions}}" value="{{statusIndex}}" bindchange="onStatusChange">
+      <view class="picker">状态：{{statusOptions[statusIndex]}}</view>
+    </picker>
+    <view class="dates">
+      <picker mode="date" value="{{start}}" bindchange="onStartChange"><view class="date">提交起：{{start||'不限'}}</view></picker>
+      <picker mode="date" value="{{end}}" bindchange="onEndChange"><view class="date">提交止：{{end||'不限'}}</view></picker>
+    </view>
+    <view class="kw">
+      <input class="kw-input" placeholder="关键词（标题/描述）" value="{{kw}}" bindinput="onKwInput" />
+      <button size="mini" bindtap="doSearch">筛选</button>
+      <button size="mini" bindtap="resetFilters">重置</button>
+    </view>
+  </view>
+
+  <block wx:if="{{list && list.length}}">
+    <block wx:for="{{list}}" wx:key="id">
+      <view class="card" data-id="{{item.id}}" bindtap="openDetail">
+        <view class="title">{{item.title}}</view>
+        <view class="meta">{{item.type==='VIRTUE'?'善恶点':'贡献点'}} · {{item.occurredAt || item.occurredDate}}</view>
+        <block wx:if="{{item.status==='APPROVED'}}">
+          <view class="meta score">分值：{{item.review && item.review.score}}</view>
+          <view class="meta comment" wx:if="{{item.review && item.review.comment}}">{{item.review.comment}}</view>
+        </block>
+        <block wx:elif="{{item.status==='PENDING'}}">
+          <view class="meta pending">待审核</view>
+        </block>
+        <block wx:elif="{{item.status==='REJECTED'}}">
+          <view class="meta rejected">已驳回：{{item.review && item.review.comment}}</view>
+        </block>
+        <view class="meta" wx:if="{{item.attachments && item.attachments.length}}">附件：{{item.attachments.length}} 张</view>
+      </view>
+    </block>
+  </block>
+  <view class="empty" wx:else>
+    <view>暂无记录，去提交一条吧</view>
+    <button size="mini" type="primary" bindtap="goSubmit">去提交</button>
+
+  </view>
+
+
+
+
+
+
+
+
+  <!-- 详情弹窗：只读展示 -->
+  <view class="detail-mask" wx:if="{{detailVisible}}" catchtouchmove="true">
+    <view class="detail-panel center">
+      <view class="d-header">
+        <view class="d-title">提交详情</view>
+        <text class="d-close" bindtap="closeDetail">×</text>
+      </view>
+      <view class="d-row"><text class="d-label">标题：</text><text class="d-value">{{detail.title}}</text></view>
+      <view class="d-row"><text class="d-label">提交人：</text><text class="d-value">{{detail.userNickname}}</text></view>
+      <view class="d-row"><text class="d-label">状态：</text><text class="d-value">{{detail.status}}</text></view>
+      <view class="d-row"><text class="d-label">发生时间：</text><text class="d-value">{{detail.occurredDate}}</text></view>
+      <view class="d-row"><text class="d-label">提交时间：</text><text class="d-value">{{detail.createdDate}}</text></view>
+      <view class="d-row d-multi"><text class="d-label">描述：</text><text class="d-value">{{detail.description}}</text></view>
+      <view class="d-row"><text class="d-label">审批备注：</text><text class="d-value">{{detail.reviewComment}}</text></view>
+      <view class="d-row"><text class="d-label">分值：</text><text class="d-value">{{detail.reviewScore!=null?detail.reviewScore:''}}</text></view>
+      <view class="d-row" wx:if="{{detail.reviewedAt}}"><text class="d-label">评审时间：</text><text class="d-value">{{detail.reviewedAt}}</text></view>
+      <view class="d-row" wx:if="{{detail.reviewedByName}}"><text class="d-label">评审人：</text><text class="d-value">{{detail.reviewedByName}}</text></view>
+
+      <view class="d-att" wx:if="{{detail.attachments && detail.attachments.length}}">
+        <block wx:for="{{detail.attachments}}" wx:key="index">
+          <image class="att-img" src="{{item}}" mode="aspectFill" />
+        </block>
+      </view>
+
+      <view class="d-actions"><button size="mini" bindtap="closeDetail">关闭</button></view>
+    </view>
+  </view>
+
+</view>
+
+

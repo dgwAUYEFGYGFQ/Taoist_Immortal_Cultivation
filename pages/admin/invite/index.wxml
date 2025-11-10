@@ -1,0 +1,33 @@
+<view class="wrap">
+  <view class="section">
+    <view class="row">
+      <text class="label">数量</text>
+      <input class="input" type="number" value="{{gen.count}}" bindinput="onInputCount" placeholder="3" />
+    </view>
+    <view class="row">
+      <text class="label">过期日</text>
+      <picker mode="date" value="{{gen.expireAt}}" bindchange="onInputDate">
+        <view class="picker">{{displayExpireAt}}</view>
+      </picker>
+    </view>
+    <view class="row">
+      <text class="label">备注</text>
+      <input class="input" value="{{gen.remark}}" bindinput="onInputRemark" placeholder="用于识别用途" />
+    </view>
+    <button class="btn" type="primary" bindtap="generate" loading="{{loading}}">生成邀请码</button>
+  </view>
+
+  <view class="list">
+    <block wx:for="{{list}}" wx:key="id">
+      <view class="item">
+        <view class="code">{{item.code}}</view>
+        <view class="meta">
+          <text class="status">{{item.status}}</text>
+          <text wx:if="{{item.expireDate}}" class="expire">截止 {{item.expireDate}}</text>
+          <text wx:if="{{item.usedDate}}" class="used">已用 {{item.usedDate}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+

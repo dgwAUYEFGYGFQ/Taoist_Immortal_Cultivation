@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="title">邀请码激活</view>
+  <input class="code-input" placeholder="请输入邀请码" bindinput="onInput" />
+  <button class="btn" bindtap="onActivate">激活</button>
+</view>
+

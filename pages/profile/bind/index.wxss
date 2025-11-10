@@ -1,0 +1,2 @@
+.page{padding:16px}.form{display:flex;flex-direction:column;gap:12px}.input{border:1px solid #ddd;border-radius:6px;padding:10px}
+

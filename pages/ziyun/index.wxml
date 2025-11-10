@@ -1,0 +1,49 @@
+<view class="page">
+  <view class="header">
+    <text class="title">紫云阁</text>
+  </view>
+
+  <block wx:if="{{loading}}">
+    <view class="empty">加载中...</view>
+  </block>
+  <block wx:else>
+    <view class="status">
+      <view class="row">
+        <text class="label">当前在内</text>
+        <text class="value">{{ status.insideUser ? status.insideUser.nickname : '无人' }}</text>
+      </view>
+      <view class="row">
+        <text class="label">队列人数</text>
+        <text class="value">{{ (status.queue && status.queue.length) || 0 }}</text>
+      </view>
+      <view class="row">
+        <text class="label">我的位置</text>
+        <text class="value">{{ positionText }}</text>
+      </view>
+      <view class="row">
+        <text class="label">善恶点余额</text>
+        <text class="value">{{ status.virtueBalance || 0 }}</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button wx:if="{{showJoin}}" type="primary" bindtap="onJoin" loading="{{joining}}">报名进入（-10 善恶点）</button>
+      <button wx:if="{{showCancel}}" type="warn" bindtap="onCancel" loading="{{leaving}}">取消排队（未入场退回10）</button>
+      <button wx:if="{{showLeave}}" bindtap="onLeave" loading="{{leaving}}">离开</button>
+      <button bindtap="refresh">刷新状态</button>
+    </view>
+
+    <view class="queue">
+      <view class="q-title">排队中</view>
+      <block wx:if="{{status.queue && status.queue.length}}">
+        <block wx:for="{{status.queue}}" wx:key="id">
+          <view class="q-item">{{index + 1}}. {{item.nickname}}</view>
+        </block>
+      </block>
+      <block wx:else>
+        <view class="empty">暂无排队</view>
+      </block>
+    </view>
+  </block>
+</view>
+

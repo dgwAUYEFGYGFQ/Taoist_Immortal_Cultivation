@@ -1,0 +1,48 @@
+
+<view class="page">
+  <view class="tabs">
+    <scroll-view class="tabs-scroll" scroll-x="true" enable-flex="true">
+      <view class="tab-list">
+        <block wx:for="{{levels}}" wx:key="layer">
+          <view class="tab-item {{currentLayer===item.layer?'active':''}} {{!item.unlocked ? 'locked' : ''}}"
+                data-layer="{{item.layer}}" bindtap="onTapLayer">
+            <text class="name">{{item.displayName || ('第' + item.layer + '层')}}</text>
+            <block wx:if="{{!item.unlocked}}">
+              <text class="sub">需{{item.minScore}}分</text>
+            </block>
+            <block wx:else>
+              <text class="sub">已解锁</text>
+            </block>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="list">
+    <block wx:if="{{exhibits.length>0}}">
+      <block wx:for="{{exhibits}}" wx:key="id">
+        <view class="card {{!item.isUnderstood?'disabled':''}}" data-id="{{item.id}}" bindtap="goDetail">
+          <image class="cover" src="{{item.imageUrl}}" mode="aspectFill" />
+          <view class="meta">
+            <view class="title">{{item.name}}</view>
+            <view class="subline">
+              <text class="badge">{{item.grade || ''}}</text>
+              <text class="badge">{{item.effectType || ''}}</text>
+              <text class="cost">需贡献点 {{item.costPoints || 0}}</text>
+            </view>
+            <block wx:if="{{item.hint}}">
+              <view class="hint">{{item.hint}}</view>
+            </block>
+          </view>
+        </view>
+      </block>
+    </block>
+    <block wx:else>
+      <view class="empty">暂无展品</view>
+    </block>
+  </view>
+</view>
+
+
+

@@ -1,0 +1,17 @@
+<view class="container">
+  <view class="home-card" wx:if="{{!loading}}">
+    <view class="row">
+      <text class="label">善恶点</text>
+      <text class="value">{{ me.virtueBalance || 0 }}</text>
+    </view>
+    <view class="row">
+      <text class="label">贡献点</text>
+      <text class="value">{{ me.contribBalance || 0 }}</text>
+    </view>
+  </view>
+
+  <view class="btn-row">
+    <button class="primary" bindtap="goSubmit">去做功德</button>
+    <button bindtap="goMine">查看记录</button>
+  </view>
+</view>
