@@ -71,11 +71,54 @@ export function request<T>(options: WechatMiniprogram.RequestOption) {
   });
 }
 
+function isCloudPreferred(): boolean {
+  try {
+    const force = wx.getStorageSync('USE_CLOUD') as any
+    if (force === true || force === '1') return !!(wx as any).cloud
+    const info = (wx.getAccountInfoSync && wx.getAccountInfoSync()) as any
+    const env = info?.miniProgram?.envVersion || 'develop'
+    return !!(wx as any).cloud && (env === 'trial' || env === 'release')
+  } catch (_) {
+    return !!(wx as any).cloud
+  }
+}
+
+function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DELETE'; data?: any }) {
+  return new Promise<T>((resolve, reject) => {
+    const cloud = (wx as any).cloud
+    if (!cloud || !cloud.callFunction) return reject(new Error('cloud not available'))
+    cloud.callFunction({
+      name: 'api',
+      data: { path: options.url, method: (options.method || 'GET'), data: (options.data || null) }
+    }).then((res: any) => {
+      const body = res?.result
+      if (body && typeof body === 'object' && 'code' in body) {
+        const codeVal = (body as any).code
+        const ok = codeVal === 0 || codeVal === 'OK'
+        if (ok) resolve(((body as any).data) as T)
+        else { toast((body as any).message || '请求失败'); reject(body) }
+      } else {
+        resolve((body as T))
+      }
+    }).catch((err: any) => {
+      const msg = (err && (err.errMsg || err.message)) ? String(err.errMsg || err.message) : '网络异常，请稍后再试'
+      toast(msg); reject(err)
+    })
+  })
+}
+
+
 export function get<T>(url: string, data?: any) {
+  if (isCloudPreferred()) {
+    return cloudRequest<T>({ url, method: 'GET', data }).catch(() => request<T>({ url, method: 'GET', data }))
+  }
   return request<T>({ url, method: 'GET', data });
 }
 
 export function post<T>(url: string, data?: any) {
+  if (isCloudPreferred()) {
+    return cloudRequest<T>({ url, method: 'POST', data }).catch(() => request<T>({ url, method: 'POST', data }))
+  }
   return request<T>({ url, method: 'POST', data });
 }
 

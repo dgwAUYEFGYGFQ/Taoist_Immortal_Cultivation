@@ -10,6 +10,34 @@ function buildAuthHeaders() {
   return h
 }
 
+function isCloudPreferred(): boolean {
+  try {
+    const force = wx.getStorageSync('USE_CLOUD') as any
+    if (force === true || force === '1') return !!(wx as any).cloud
+    const info = (wx.getAccountInfoSync && wx.getAccountInfoSync()) as any
+    const env = info?.miniProgram?.envVersion || 'develop'
+    return !!(wx as any).cloud && (env === 'trial' || env === 'release')
+  } catch (_) {
+    return !!(wx as any).cloud
+  }
+}
+
+function pad2(n: number): string { return n < 10 ? '0' + n : String(n) }
+function inferExt(p: string): string {
+  const m = /\.([a-zA-Z0-9]+)$/.exec(p || '')
+  return (m && m[1]) ? m[1].toLowerCase() : 'jpg'
+}
+
+async function cloudUploadOne(localPath: string, options?: { cloudDir?: string }): Promise<string> {
+  const cloud = (wx as any).cloud
+  if (!cloud || !cloud.uploadFile) throw new Error('cloud not available')
+  const d = new Date()
+  const cloudPath = `${(options?.cloudDir)||'uploads'}/${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}/${d.getTime()}_${Math.floor(Math.random()*100000)}.${inferExt(localPath)}`
+  const res = await cloud.uploadFile({ cloudPath, filePath: localPath })
+  return (res && (res.fileID || res.fileId)) || cloudPath
+}
+
+
 function parseUploadResponse(data: string, preferKey?: boolean): string {
   try {
     const obj = JSON.parse(data as any)
@@ -32,8 +60,19 @@ function parseUploadResponse(data: string, preferKey?: boolean): string {
 }
 
 async function uploadOne(localPath: string, options?: { url?: string; fieldName?: string; formData?: Record<string, string>; preferKey?: boolean }): Promise<string> {
-  // 已经是线上 URL 的：若偏好 key，则不能直接返回；否则直接透传
+  // 已经是云文件或线上 URL 的：若偏好 key，则不能直接返回；否则直接透传
+  if (/^cloud:\/\//i.test(localPath)) return localPath
   if (/^https?:\/\//i.test(localPath) && !options?.preferKey) return localPath
+
+  // 云优先上传（失败自动回退 HTTP）
+  try {
+    if (isCloudPreferred() && (wx as any).cloud && (wx as any).cloud.uploadFile) {
+      const fid = await cloudUploadOne(localPath)
+      return fid
+    }
+  } catch (_) {
+    // ignore and fallback
+  }
 
   const url = (options?.url) || (BASE_URL + '/api/upload')
   const name = options?.fieldName || 'file'
