@@ -13,10 +13,12 @@ function buildAuthHeaders() {
 function isCloudPreferred(): boolean {
   try {
     const force = wx.getStorageSync('USE_CLOUD') as any
+    // 显式关闭云优先
+    if (force === false || force === '0') return false
+    // 显式开启云优先
     if (force === true || force === '1') return !!(wx as any).cloud
-    const info = (wx.getAccountInfoSync && wx.getAccountInfoSync()) as any
-    const env = info?.miniProgram?.envVersion || 'develop'
-    return !!(wx as any).cloud && (env === 'trial' || env === 'release')
+    // 默认：只要有云能力就优先走云（包括开发环境）
+    return !!(wx as any).cloud
   } catch (_) {
     return !!(wx as any).cloud
   }

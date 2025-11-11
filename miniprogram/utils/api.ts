@@ -74,14 +74,26 @@ export function request<T>(options: WechatMiniprogram.RequestOption) {
 function isCloudPreferred(): boolean {
   try {
     const force = wx.getStorageSync('USE_CLOUD') as any
+    // 显式关闭云优先
+    if (force === false || force === '0') return false
+    // 显式开启云优先
     if (force === true || force === '1') return !!(wx as any).cloud
-    const info = (wx.getAccountInfoSync && wx.getAccountInfoSync()) as any
-    const env = info?.miniProgram?.envVersion || 'develop'
-    return !!(wx as any).cloud && (env === 'trial' || env === 'release')
+    // 默认：只要有云能力就优先走云（包括开发环境）
+    return !!(wx as any).cloud
   } catch (_) {
     return !!(wx as any).cloud
   }
 }
+
+function isCloudForced(): boolean {
+  try {
+    const force = wx.getStorageSync('USE_CLOUD') as any
+    return force === true || force === '1'
+  } catch (_) {
+    return false
+  }
+}
+
 
 function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DELETE'; data?: any }) {
   return new Promise<T>((resolve, reject) => {
@@ -110,14 +122,16 @@ function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DE
 
 export function get<T>(url: string, data?: any) {
   if (isCloudPreferred()) {
-    return cloudRequest<T>({ url, method: 'GET', data }).catch(() => request<T>({ url, method: 'GET', data }))
+    const p = cloudRequest<T>({ url, method: 'GET', data })
+    return isCloudForced() ? p : p.catch(() => request<T>({ url, method: 'GET', data }))
   }
   return request<T>({ url, method: 'GET', data });
 }
 
 export function post<T>(url: string, data?: any) {
   if (isCloudPreferred()) {
-    return cloudRequest<T>({ url, method: 'POST', data }).catch(() => request<T>({ url, method: 'POST', data }))
+    const p = cloudRequest<T>({ url, method: 'POST', data })
+    return isCloudForced() ? p : p.catch(() => request<T>({ url, method: 'POST', data }))
   }
   return request<T>({ url, method: 'POST', data });
 }
