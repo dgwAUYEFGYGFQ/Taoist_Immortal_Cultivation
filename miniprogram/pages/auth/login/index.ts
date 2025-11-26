@@ -2,11 +2,15 @@ import { get, post } from '../../../utils/api'
 
 Page({
   data: {
-    tab: 'login' as 'login' | 'register',
+    tab: 'login' as 'login' | 'register' | 'phoneRegister',
     // login
     phone: '',
     password: '',
-    // register
+    // phone register (新增)
+    newPhone: '',
+    newPassword: '',
+    confirmPassword: '',
+    // invite code register
     regPhone: '',
     regPassword: '',
     inviteCode: '',
@@ -65,6 +69,44 @@ Page({
       const me = await get<any>('/me/info')
       if (me?.role) wx.setStorageSync('X_ROLE', String(me.role).toUpperCase())
       wx.showToast({ title: '登录成功', icon: 'success' })
+      setTimeout(() => { wx.switchTab({ url: '/pages/profile/index' }) }, 200)
+    } catch (e) {
+      // post 已有统一错误提示
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  // 纯手机号注册（无需邀请码）
+  async doPhoneRegister() {
+    const { newPhone, newPassword, confirmPassword } = (this.data as any)
+    // 校验
+    if (!newPhone) return wx.showToast({ title: '请输入手机号', icon: 'none' })
+    if (!/^1[3-9]\d{9}$/.test(newPhone)) return wx.showToast({ title: '请输入正确的手机号格式', icon: 'none' })
+    if (!newPassword) return wx.showToast({ title: '请输入密码', icon: 'none' })
+    if (newPassword.length < 6 || newPassword.length > 64) return wx.showToast({ title: '密码长度需在6-64位之间', icon: 'none' })
+    if (newPassword !== confirmPassword) return wx.showToast({ title: '两次密码输入不一致', icon: 'none' })
+
+    this.setData({ submitting: true })
+    try {
+      // 尝试获取微信 code（可选）
+      let code = ''
+      try {
+        const loginRes = await new Promise<WechatMiniprogram.LoginSuccessCallbackResult>((resolve, reject) => {
+          wx.login({ success: resolve, fail: reject })
+        })
+        code = loginRes.code || ''
+      } catch (_) { /* 忽略 */ }
+
+      const ret = await post<any>('/auth/phone-register', { phone: newPhone, password: newPassword, code })
+      const openid = (ret as any)?.openid
+      if (!openid) throw new Error('未获取到 openid')
+
+      wx.setStorageSync('X_OPENID', openid)
+      wx.setStorageSync('X_ROLE', 'DAO_FRIEND')
+      const me = await get<any>('/me/info')
+      if (me?.role) wx.setStorageSync('X_ROLE', String(me.role).toUpperCase())
+      wx.showToast({ title: '注册成功', icon: 'success' })
       setTimeout(() => { wx.switchTab({ url: '/pages/profile/index' }) }, 200)
     } catch (e) {
       // post 已有统一错误提示

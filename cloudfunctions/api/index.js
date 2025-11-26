@@ -1,4 +1,6 @@
 const cloud = require('wx-server-sdk')
+const crypto = require('crypto')
+
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
@@ -6,6 +8,25 @@ const _ = db.command
 function ok(data) { return { code: 'OK', message: 'ok', data } }
 function err(message, code = 400) { return { code, message, data: null } }
 function nowISO() { return new Date().toISOString() }
+
+// ============ 密码哈希工具 ============
+// 格式: $sha256$<salt>$<hash>
+function hashPassword(plain, salt) {
+  if (!salt) salt = crypto.randomBytes(16).toString('hex')
+  const hash = crypto.createHmac('sha256', salt).update(plain).digest('hex')
+  return `$sha256$${salt}$${hash}`
+}
+
+function verifyPassword(plain, hashed) {
+  if (!hashed || !plain) return false
+  const parts = String(hashed).split('$')
+  // parts: ['', 'sha256', salt, hash]
+  if (parts.length !== 4 || parts[1] !== 'sha256') return false
+  const salt = parts[2]
+  const expected = `$sha256$${salt}$${parts[3]}`
+  const actual = hashPassword(plain, salt)
+  return actual === expected
+}
 
 function stripApiPrefix(p) { return String(p || '/').replace(/^\/api(?=\/|$)/, '') }
 
@@ -65,6 +86,67 @@ exports.main = async (event, context) => {
         return ok({ role: 'DAO_FRIEND' })
       }
       return ok({ role: me.role || 'DAO_FRIEND' })
+    }
+
+    // 0.1) POST /auth/phone-register  纯手机号注册（无需邀请码）
+    if (method === 'POST' && path === '/auth/phone-register') {
+      const { phone, password, code } = body || {}
+      // 参数校验
+      if (!phone) return err('手机号不能为空')
+      if (!password) return err('密码不能为空')
+      if (String(password).length < 6 || String(password).length > 64) return err('密码长度需在6-64位之间')
+      if (/\s/.test(password)) return err('密码不能包含空格')
+      if (!/^1[3-9]\d{9}$/.test(String(phone))) return err('请输入正确的手机号格式')
+
+      // 检查手机号是否已注册
+      const existSnap = await db.collection('users').where({ phone: String(phone) }).limit(1).get()
+      const existUser = (existSnap.data || [])[0]
+      if (existUser) return err('该手机号已注册', 400)
+
+      // 为纯手机号注册生成唯一的 openid（基于手机号的哈希，确保同一手机号生成相同 openid）
+      const phoneOpenid = 'phone_' + crypto.createHash('sha256').update(String(phone)).digest('hex').slice(0, 24)
+
+      // 检查生成的 openid 是否已存在（理论上不会，因为手机号已检查过）
+      const existOpenidSnap = await db.collection('users').where({ openid: phoneOpenid }).limit(1).get()
+      if ((existOpenidSnap.data || []).length > 0) return err('该账号已存在，请直接登录', 400)
+
+      const now = nowISO()
+      const passwordHash = hashPassword(password)
+      const userData = {
+        openid: phoneOpenid,
+        phone: String(phone),
+        passwordHash,
+        role: 'DAO_FRIEND',
+        status: 'ACTIVE',
+        nickname: '道友',
+        createdAt: now,
+        lastLoginAt: now
+      }
+
+      await db.collection('users').doc(phoneOpenid).set({ data: userData })
+      return ok({ openid: phoneOpenid, status: 'ACTIVE', role: 'DAO_FRIEND' })
+    }
+
+    // 0.2) POST /auth/password-login  手机号+密码登录
+    if (method === 'POST' && path === '/auth/password-login') {
+      const { phone, password } = body || {}
+      // 参数校验
+      if (!phone || !password) return err('手机号和密码不能为空')
+      if (/\s/.test(password)) return err('密码不能包含空格')
+      // 根据手机号查找用户
+      const snap = await db.collection('users').where({ phone: String(phone) }).limit(1).get()
+      const user = (snap.data || [])[0]
+      if (!user) return err('用户不存在或手机号未绑定', 401)
+      // 检查用户状态
+      const status = String(user.status || '').toUpperCase()
+      if (status !== 'ACTIVE') return err('账号未激活，请先使用邀请码激活', 403)
+      // 验证密码
+      if (!user.passwordHash) return err('账号未设置密码，请联系管理员', 401)
+      if (!verifyPassword(password, user.passwordHash)) return err('密码错误', 401)
+      // 登录成功，更新最后登录时间
+      const now = nowISO()
+      await db.collection('users').where({ openid: user.openid }).update({ data: { lastLoginAt: now } })
+      return ok({ openid: user.openid, status: 'ACTIVE', role: user.role || 'DAO_FRIEND' })
     }
 
     // 1) GET /me/info

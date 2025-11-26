@@ -95,6 +95,15 @@ function isCloudForced(): boolean {
 }
 
 
+// 用于标记业务错误（不应回退 HTTP）
+class BusinessError extends Error {
+  body: any
+  constructor(body: any) {
+    super(body?.message || '请求失败')
+    this.body = body
+  }
+}
+
 function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DELETE'; data?: any }) {
   return new Promise<T>((resolve, reject) => {
     const cloud = (wx as any).cloud
@@ -120,11 +129,16 @@ function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DE
         const codeVal = (body as any).code
         const ok = codeVal === 0 || codeVal === 'OK'
         if (ok) resolve(((body as any).data) as T)
-        else { toast((body as any).message || '请求失败'); reject(body) }
+        else {
+          // 业务错误：提示用户，但用 BusinessError 标记，不触发回退
+          toast((body as any).message || '请求失败')
+          reject(new BusinessError(body))
+        }
       } else {
         resolve((body as T))
       }
     }).catch((err: any) => {
+      // 云函数调用失败（网络/技术层面）
       const msg = (err && (err.errMsg || err.message)) ? String(err.errMsg || err.message) : '网络异常，请稍后再试'
       toast(msg); reject(err)
     })
@@ -135,7 +149,12 @@ function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DE
 export function get<T>(url: string, data?: any) {
   if (isCloudPreferred()) {
     const p = cloudRequest<T>({ url, method: 'GET', data })
-    return isCloudForced() ? p : p.catch(() => request<T>({ url, method: 'GET', data }))
+    return isCloudForced() ? p : p.catch((e) => {
+      // 业务错误不回退，直接抛出
+      if (e instanceof BusinessError) throw e.body
+      console.warn('[云函数 GET 失败，回退 HTTP]', url, e)
+      return request<T>({ url, method: 'GET', data })
+    })
   }
   return request<T>({ url, method: 'GET', data });
 }
@@ -143,7 +162,12 @@ export function get<T>(url: string, data?: any) {
 export function post<T>(url: string, data?: any) {
   if (isCloudPreferred()) {
     const p = cloudRequest<T>({ url, method: 'POST', data })
-    return isCloudForced() ? p : p.catch(() => request<T>({ url, method: 'POST', data }))
+    return isCloudForced() ? p : p.catch((e) => {
+      // 业务错误不回退，直接抛出
+      if (e instanceof BusinessError) throw e.body
+      console.warn('[云函数 POST 失败，回退 HTTP]', url, e)
+      return request<T>({ url, method: 'POST', data })
+    })
   }
   return request<T>({ url, method: 'POST', data });
 }
