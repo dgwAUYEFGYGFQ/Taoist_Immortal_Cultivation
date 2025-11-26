@@ -99,9 +99,21 @@ function cloudRequest<T>(options: { url: string; method?: 'GET'|'POST'|'PUT'|'DE
   return new Promise<T>((resolve, reject) => {
     const cloud = (wx as any).cloud
     if (!cloud || !cloud.callFunction) return reject(new Error('cloud not available'))
+    // 开发态：把本地存的 X_OPENID / X_ROLE 一并传给云函数，用于 dev-admin/dev-elder 这类账号
+    let devOpenid = ''
+    let devRole = ''
+    try {
+      devOpenid = (wx.getStorageSync('X_OPENID') as string) || ''
+      devRole = (wx.getStorageSync('X_ROLE') as string) || ''
+    } catch (_) {}
+    const data = {
+      path: options.url,
+      method: (options.method || 'GET'),
+      data: { ...(options.data || {}), _mockOpenid: devOpenid || undefined, _mockRole: devRole || undefined }
+    }
     cloud.callFunction({
       name: 'api',
-      data: { path: options.url, method: (options.method || 'GET'), data: (options.data || null) }
+      data
     }).then((res: any) => {
       const body = res?.result
       if (body && typeof body === 'object' && 'code' in body) {

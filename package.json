@@ -4,12 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "export:mysql": "node scripts/export-mysql-to-clouddb.js",
+    "export:mysql:all": "node scripts/export-all-tables-csv.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "miniprogram-api-typings": "^4.1.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.15.3"
   }
 }

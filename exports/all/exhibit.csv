@@ -1,0 +1,8 @@
+id,level_id,name,image_url,lore,created_at
+1,1,养气丹,https://cdn.example.com/exhibits/yangqidan.png,"入门丹药，助益气血与精神，适合练气期修士",2025-10-20 01:00:00.000
+2,2,筑基符,https://cdn.example.com/exhibits/zhujifu.png,"辅佐筑基，稳固根基",2025-10-20 01:05:00.000
+3,3,聚灵阵盘,https://cdn.example.com/exhibits/julingzhenpan.png,"小型法阵，聚敛灵气，利于闭关",2025-10-20 01:10:00.000
+4,4,元婴护心镜,https://cdn.example.com/exhibits/huxinjing.png,"古镜护心，可辟邪障",2025-10-20 01:15:00.000
+5,5,化神灵符,https://cdn.example.com/exhibits/huashenlingfu.png,"符箓一道，增益神识",2025-10-20 01:20:00.000
+6,6,合道神纹,https://cdn.example.com/exhibits/hedaoshenwen.png,"道纹铭刻，玄之又玄",2025-10-20 01:25:00.000
+

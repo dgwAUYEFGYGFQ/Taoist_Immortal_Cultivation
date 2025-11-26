@@ -11,8 +11,9 @@ function stripApiPrefix(p) { return String(p || '/').replace(/^\/api(?=\/|$)/, '
 
 async function getProfile(openid) {
   try {
-    const r = await db.collection('user_profiles').doc(openid).get()
-    return r.data || null
+    const snap = await db.collection('users').where({ openid }).limit(1).get()
+    const row = (snap.data || [])[0]
+    return row || null
   } catch (_) { return null }
 }
 async function getPoints(openid) {
@@ -41,19 +42,26 @@ exports.main = async (event, context) => {
   const method = String(event.method || 'GET').toUpperCase()
   let path = stripApiPrefix(event.path || '/')
   const body = event.data || {}
-  const openid = context.OPENID
+  const wxCtx = (cloud.getWXContext && cloud.getWXContext()) || {}
+  // 默认使用微信环境提供的 openid
+  let openid = (context && (context['OPENID'] || context['openid'])) || wxCtx['OPENID'] || wxCtx['openid'] || ''
+  // 开发态兼容：优先从 body.data._mockOpenid 里取，其次 body._mockOpenid，便于前端统一透传
+  const payload = (body && typeof body.data === 'object') ? body.data : body
+  if (payload && payload._mockOpenid) {
+    openid = String(payload._mockOpenid)
+  }
 
   try {
     // 0) POST /me/bootstrap  首次初始化：若无任何用户，则将当前人置为 ADMIN；否则仅建档
     if (method === 'POST' && path === '/me/bootstrap') {
-      const cnt = await db.collection('user_profiles').count()
+      const cnt = await db.collection('users').count()
       if ((cnt.total || 0) === 0) {
-        await db.collection('user_profiles').doc(openid).set({ data: { _id: openid, openid, role: 'ADMIN', nickname: '掌门', createdAt: nowISO() } })
+        await db.collection('users').doc(openid).set({ data: { _id: openid, openid, role: 'ADMIN', nickname: '掌门', createdAt: nowISO() } })
         return ok({ role: 'ADMIN' })
       }
       const me = await getProfile(openid)
       if (!me) {
-        await db.collection('user_profiles').doc(openid).set({ data: { _id: openid, openid, role: 'DAO_FRIEND', nickname: '道友', createdAt: nowISO() } })
+        await db.collection('users').doc(openid).set({ data: { _id: openid, openid, role: 'DAO_FRIEND', nickname: '道友', createdAt: nowISO() } })
         return ok({ role: 'DAO_FRIEND' })
       }
       return ok({ role: me.role || 'DAO_FRIEND' })
